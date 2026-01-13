@@ -239,7 +239,11 @@ class acc_user_importer_Admin
         $userFirstName = $params["first_name"] ?? "";
         $userLastName = $params["last_name"] ?? "";
         $userNameInLog = "_" . $userFirstName . "_" . $userLastName;
-        preg_replace("/[^A-Za-z0-9.\-_]/", "_", $userNameInLog);
+        $userNameInLog = preg_replace(
+            "/[^A-Za-z0-9.\-_]/",
+            "_",
+            $userNameInLog
+        );
         $logfilename = basename(acc_pick_new_log_file($userNameInLog));
         accLog("Received the following membership notification: ");
         accLog(var_export($params, true));
@@ -290,14 +294,18 @@ class acc_user_importer_Admin
         $userMemberId = strval($params["acc_member_id"]);
         $userFullName = $userFirstName . " " . $userLastName;
         $userEmail = strtolower($params["user_email"] ?? "");
-        $userCellPhone = strval($params["cell_phone"]) ?? "";
-        $receivedSections = $params["acc_sections"] ?? [];
+        $userCellPhone = isset($params["cell_phone"])
+            ? strval($params["cell_phone"])
+            : "";
+        $receivedSections = $params["acc_sections"] ?? "";
         $mshipType = $params["acc_mship_type"] ?? "";
         $mshipExpiry = $params["acc_mship_expiry"] ?? null;
         $waiverExpiry = $params["acc_waiver_expiry"] ?? null;
         $contactFname = $params["acc_contact_name"] ?? "";
         $contactLname = $params["acc_contact_email"] ?? "";
-        $contactPhone = strval($params["acc_contact_phone"]) ?? "";
+        $contactPhone = isset($params["acc_contact_phone"])
+            ? strval($params["acc_contact_phone"])
+            : "";
 
         // Sanity check received timestamps and convert some to Y-M-D
         // Keep the notification timestamp in UNIX format because
@@ -335,7 +343,7 @@ class acc_user_importer_Admin
         // warning if ACC notifies us about sections we dont care about.
         $validSections = acc_get_supported_sections();
         $rxdSections = [];
-        $sectionsArray = explode(";", $receivedSections); //Split the string
+        $sectionsArray = explode(";", strval($receivedSections)); //Split the string
 
         foreach ($sectionsArray as $section) {
             $section = trim($section); // Trim whitespace
@@ -1011,6 +1019,7 @@ class acc_user_importer_Admin
             (!empty($sectionsAdded) ||
              !empty($sectionsDeleted) ||
              !empty($errors) ||
+             !empty($warnings) ||
              !empty($deleted_users))
         ) {
             $title = accUM_get_notification_title();
